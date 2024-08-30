@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm" action="/login" method="POST">
+            <label for="username">Username:</label><br>
+            <input type="text" id="username" name="username" required><br><br>
+            <label for="password">Password:</label><br>
+            <input type="password" id="password" name="password" required><br><br>
+            <input type="submit" value="Login">
+        </form>
+
+        <!-- Link to open the customer form -->
+        <div class="new-customer-link">
+            <a href="{{ url_for('customer_form') }}">Customer? Click here to add your details</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').onsubmit = function(event) {
+            event.preventDefault();
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+
+                        const formData = new FormData();
+                        formData.append('username', document.getElementById('username').value);
+                        formData.append('password', document.getElementById('password').value);
+                        formData.append('latitude', latitude);
+                        formData.append('longitude', longitude);
+
+                        fetch('/login', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.text())
+                        .then(data => {
+                            if (data.includes('Admin Dashboard') || data.includes('Sales Dashboard') || data.includes('Employee Dashboard')) {
+                                window.location.href = data.includes('Admin Dashboard') ? '/admin_dashboard' : 
+                                                       data.includes('Sales Dashboard') ? '/sales_dashboard' : 
+                                                       '/employee_dashboard';
+                            } else {
+                                alert('Login failed!');
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                    },
+                    function(error) {
+                        alert('Geolocation error: ' + error.message);
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+    </script>
+</body>
+</html>
